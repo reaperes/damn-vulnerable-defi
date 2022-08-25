@@ -2,7 +2,7 @@
 
 1. [Unstoppable](https://github.com/reaperes/damn-vulnerable-defi#unstoppable)
 2. [Naive receiver](https://github.com/reaperes/damn-vulnerable-defi#naive-receiver)
-3. Truster
+3. [Truster](https://github.com/reaperes/damn-vulnerable-defi#truster)
 4. Side entrance
 5. The rewarder
 6. Selfie
@@ -65,4 +65,17 @@ function receiveEther(uint256 fee) public payable {
 따라서 이부분을 활용해 공격자가 지속적으로 0 ether 를 빌리도록 강제하면 컨트랙트의 ether 가 고갈 되게 됩니다.
 
 상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/naive-receiver/naive-receiver.challenge.js#L33)
+를 참고해 주세요.
+
+## Truster
+More and more lending pools are offering flash loans. In this case, a new pool has launched that is offering flash loans of DVT tokens for free.
+Currently the pool has 1 million DVT tokens in balance. And you have nothing.
+But don't worry, you might be able to take them all from the pool. In a single transaction.
+
+### How to exploit
+TrusterLenderPool 에는 임의의 data 를 임의의 address 에 call 할 수 있는 취약점 코드가 포함되어 있습니다.
+ERC20 의 approve & transferFrom 을 이용하면 flashLoan 함수를 호출하면서 approve 를 실행시켜 놓고,
+이후에 transferFrom 을 이용해 contract 에 들어 있는 token 을 탈취할 수 있습니다.
+
+상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/naive-receiver/naive-receiver.challenge.js#L32)
 를 참고해 주세요.
