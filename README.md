@@ -3,7 +3,7 @@
 1. [Unstoppable](https://github.com/reaperes/damn-vulnerable-defi#unstoppable)
 2. [Naive receiver](https://github.com/reaperes/damn-vulnerable-defi#naive-receiver)
 3. [Truster](https://github.com/reaperes/damn-vulnerable-defi#truster)
-4. Side entrance
+4. [Side entrance](https://github.com/reaperes/damn-vulnerable-defi#side-entrance)
 5. The rewarder
 6. Selfie
 7. Compromised
