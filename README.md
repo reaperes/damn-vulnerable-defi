@@ -79,3 +79,15 @@ ERC20 의 approve & transferFrom 을 이용하면 flashLoan 함수를 호출하�
 
 상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/naive-receiver/naive-receiver.challenge.js#L32)
 를 참고해 주세요.
+
+## Side entrance
+A surprisingly simple lending pool allows anyone to deposit ETH, and withdraw it at any point in time.
+This very simple lending pool has 1000 ETH in balance already, and is offering free flash loans using the deposited ETH to promote their system.
+You must take all ETH from the lending pool.
+
+### How to exploit
+LenderPool 은 flashLoan 실행 시 마지막 검증 과정에서 현재 contract 의 balance 가 이전보다 줄지 않았는지만 확인합니다.
+하지만 flashLoan 상황에서 실제 반환이 아닌, deposit 을 이용한 반환을 할 경우 attacker 가 돈을 모두 가로챌 수 있습니다.
+
+상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/side-entrance/side-entrance.challenge.js#L26)
+를 참고해 주세요.
