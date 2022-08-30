@@ -4,7 +4,7 @@
 2. [Naive receiver](https://github.com/reaperes/damn-vulnerable-defi#naive-receiver)
 3. [Truster](https://github.com/reaperes/damn-vulnerable-defi#truster)
 4. [Side entrance](https://github.com/reaperes/damn-vulnerable-defi#side-entrance)
-5. The rewarder
+5. [The rewarder](https://github.com/reaperes/damn-vulnerable-defi#the-rewarder)
 6. Selfie
 7. Compromised
 8. Puppet
@@ -90,4 +90,18 @@ LenderPool 은 flashLoan 실행 시 마지막 검증 과정에서 현재 contrac
 하지만 flashLoan 상황에서 실제 반환이 아닌, deposit 을 이용한 반환을 할 경우 attacker 가 돈을 모두 가로챌 수 있습니다.
 
 상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/side-entrance/side-entrance.challenge.js#L26)
+를 참고해 주세요.
+
+## The rewarder
+There's a pool offering rewards in tokens every 5 days for those who deposit their DVT tokens into it.
+Alice, Bob, Charlie and David have already deposited some DVT tokens, and have won their rewards!
+You don't have any DVT tokens. But in the upcoming round, you must claim most rewards for yourself.
+Oh, by the way, rumours say a new pool has just landed on mainnet. Isn't it offering DVT tokens in flash loans?
+
+### How to exploit
+RewarderPool 은 기본적으로 스테이킹 한 금액에 비례해서 rewardToken 을 분배 합니다. 하지만 스테이킹을 한 직후에
+보상을 분배 하기 때문에, 분배 가능한 시점 직후에 취약점 공격 transaction 을 보내면 스테이킹 한 것과 동일한 지위를 획득하여 
+보상을 분배 받을 수 있습니다.
+
+상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/the-rewarder/the-rewarder.challenge.js#L68)
 를 참고해 주세요.
