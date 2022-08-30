@@ -5,7 +5,7 @@
 3. [Truster](https://github.com/reaperes/damn-vulnerable-defi#truster)
 4. [Side entrance](https://github.com/reaperes/damn-vulnerable-defi#side-entrance)
 5. [The rewarder](https://github.com/reaperes/damn-vulnerable-defi#the-rewarder)
-6. Selfie
+6. [Selfie](https://github.com/reaperes/damn-vulnerable-defi#selfie)
 7. Compromised
 8. Puppet
 9. Puppet v2
@@ -104,4 +104,23 @@ RewarderPool 은 기본적으로 스테이킹 한 금액에 비례해서 rewardT
 보상을 분배 받을 수 있습니다.
 
 상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/the-rewarder/the-rewarder.challenge.js#L68)
+를 참고해 주세요.
+
+## Selfie
+A new cool lending pool has launched! It's now offering flash loans of DVT tokens.
+Wow, and it even includes a really fancy governance mechanism to control it.
+What could go wrong, right ?
+You start with no DVT tokens in balance, and the pool has 1.5 million. Your objective: take them all.
+
+### How to exploit
+Pool 에는 governance 만 실행할 수 있는 drainAllFunds 함수가 있습니다. 그리고 Governance 는 token 발행량의 절반
+이상을 가지고 있을 경우 governance action 을 실행할 수 있는 권한을 가지게 됩니다. 또한 해당 권한 체크는 등록할 때만
+필요하며, 실제 실행 시점은 필요 없습니다. 이 기능을 엮어서
+
+1. pool 에서 flash loan 을 빌리면서 governance 를 통해 drainAllFunds 를 실행하는 action 등록
+2. 실행 대기 최소 기간 이후 governance 에서 action 을 호출해 drainAllFunds 를 실행
+
+순서로 실행하면 pool 이 가지고 있는 모든 DVT 토큰을 가로챌 수 있습니다.
+
+상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/selfie/selfie.challenge.js#L33)
 를 참고해 주세요.
