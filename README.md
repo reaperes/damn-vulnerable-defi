@@ -6,7 +6,7 @@
 4. [Side entrance](https://github.com/reaperes/damn-vulnerable-defi#side-entrance)
 5. [The rewarder](https://github.com/reaperes/damn-vulnerable-defi#the-rewarder)
 6. [Selfie](https://github.com/reaperes/damn-vulnerable-defi#selfie)
-7. Compromised
+7. [Compromised](https://github.com/reaperes/damn-vulnerable-defi#compromised)
 8. Puppet
 9. Puppet v2
 10. Free rider
@@ -123,4 +123,29 @@ Pool 에는 governance 만 실행할 수 있는 drainAllFunds 함수가 있습�
 순서로 실행하면 pool 이 가지고 있는 모든 DVT 토큰을 가로챌 수 있습니다.
 
 상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/selfie/selfie.challenge.js#L33)
+를 참고해 주세요.
+
+## Compromised
+While poking around a web service of one of the most popular DeFi projects in the space, you get a somewhat strange response from their server. This is a snippet:
+```
+HTTP/2 200 OK
+content-type: text/html
+content-language: en
+vary: Accept-Encoding
+server: cloudflare
+
+4d 48 68 6a 4e 6a 63 34 5a 57 59 78 59 57 45 30 4e 54 5a 6b 59 54 59 31 59 7a 5a 6d 59 7a 55 34 4e 6a 46 6b 4e 44 51 34 4f 54 4a 6a 5a 47 5a 68 59 7a 42 6a 4e 6d 4d 34 59 7a 49 31 4e 6a 42 69 5a 6a 42 6a 4f 57 5a 69 59 32 52 68 5a 54 4a 6d 4e 44 63 7a 4e 57 45 35
+
+4d 48 67 79 4d 44 67 79 4e 44 4a 6a 4e 44 42 68 59 32 52 6d 59 54 6c 6c 5a 44 67 34 4f 57 55 32 4f 44 56 6a 4d 6a 4d 31 4e 44 64 68 59 32 4a 6c 5a 44 6c 69 5a 57 5a 6a 4e 6a 41 7a 4e 7a 46 6c 4f 54 67 33 4e 57 5a 69 59 32 51 33 4d 7a 59 7a 4e 44 42 69 59 6a 51 34
+```
+A related on-chain exchange is selling (absurdly overpriced) collectibles called "DVNFT", now at 999 ETH each
+This price is fetched from an on-chain oracle, and is based on three trusted reporters: 0xA73209FB1a42495120166736362A1DfA9F95A105,0xe92401A4d3af5E446d93D11EEc806b1462b39D15 and 0x81A5D6E50C214044bE44cA0CB057fe119097850c.
+Starting with only 0.1 ETH in balance, you must steal all ETH available in the exchange.
+
+### How to exploit
+서버에서 받은 hexadecimal 코드를 ascii 로 변환하고, base64 decode 를 해보면 private key 가 나옵니다. 해당 private
+key 를 이용해 public address 를 추출하면 trusted source 주소가 나옵니다. 훔친 key 를 활용해 oracle 의 시세를 살때는
+저렴하게, 팔때는 비싸게 되파는 형식으로 tx 를 보내면 exchange 에 있는 모든 ether 를 가로챌 수 있습니다.
+
+상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/compromised/compromised.challenge.js#L63)
 를 참고해 주세요.
