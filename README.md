@@ -7,7 +7,7 @@
 5. [The rewarder](https://github.com/reaperes/damn-vulnerable-defi#the-rewarder)
 6. [Selfie](https://github.com/reaperes/damn-vulnerable-defi#selfie)
 7. [Compromised](https://github.com/reaperes/damn-vulnerable-defi#compromised)
-8. Puppet
+8. [Puppet](https://github.com/reaperes/damn-vulnerable-defi#puppet)
 9. Puppet v2
 10. Free rider
 11. Backdoor
@@ -148,4 +148,41 @@ key 를 이용해 public address 를 추출하면 trusted source 주소가 나�
 저렴하게, 팔때는 비싸게 되파는 형식으로 tx 를 보내면 exchange 에 있는 모든 ether 를 가로챌 수 있습니다.
 
 상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/compromised/compromised.challenge.js#L63)
+를 참고해 주세요.
+
+## Puppet
+There's a huge lending pool borrowing Damn Valuable Tokens (DVTs), where you first need to deposit twice the borrow amount in ETH as collateral. The pool currently has 100000 DVTs in liquidity.
+There's a DVT market opened in an Uniswap v1 exchange, currently with 10 ETH and 10 DVT in liquidity.
+Starting with 25 ETH and 1000 DVTs in balance, you must steal all tokens from the lending pool.
+
+### How to exploit
+PuppetPool 은 oracle 에 있는 가격의 2배를 지불하면 DVT token 을 대여할 수 있게끔 구조가 되어 있습니다.
+```
+function borrow(uint256 borrowAmount) public payable nonReentrant {
+    uint256 depositRequired = calculateDepositRequired(borrowAmount);
+    require(msg.value >= depositRequired, "Not depositing enough collateral");
+    ...
+}
+
+function calculateDepositRequired(uint256 amount) public view returns (uint256) {
+    return amount * _computeOraclePrice() * 2 / 10 ** 18;
+}
+```
+
+Oracle 가격은 uniswap pair 에만 의존 되고 있습니다.
+```
+function _computeOraclePrice() private view returns (uint256) {
+    // calculates the price of the token in wei according to Uniswap pair
+    return uniswapPair.balance * (10 ** 18) / token.balanceOf(uniswapPair);
+}
+```
+
+또한 현재 oracle 의 liquidity 는 10ETH, 10DVT 로 가격 변동에 취약합니다. 이를 활용해
+
+1. swap 을 통해 Oracle 가격 조작
+2. 조작된 가격으로 토큰 대여
+
+를 실행하면 pool 에 있는 모든 DVT 토큰을 탈취할 수 있습니다.
+
+상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/puppet/puppet.challenge.js#L105)
 를 참고해 주세요.
