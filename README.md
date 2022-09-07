@@ -8,7 +8,7 @@
 6. [Selfie](https://github.com/reaperes/damn-vulnerable-defi#selfie)
 7. [Compromised](https://github.com/reaperes/damn-vulnerable-defi#compromised)
 8. [Puppet](https://github.com/reaperes/damn-vulnerable-defi#puppet)
-9. Puppet v2
+9. [Puppet v2](https://github.com/reaperes/damn-vulnerable-defi#puppet-v2)
 10. Free rider
 11. Backdoor
 12. Climber
@@ -185,4 +185,16 @@ function _computeOraclePrice() private view returns (uint256) {
 를 실행하면 pool 에 있는 모든 DVT 토큰을 탈취할 수 있습니다.
 
 상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/puppet/puppet.challenge.js#L105)
+를 참고해 주세요.
+
+## Puppet V2
+The developers of the last lending pool are saying that they've learned the lesson. And just released a new version!
+Now they're using a Uniswap v2 exchange as a price oracle, along with the recommended utility libraries. That should be enough.
+You start with 20 ETH and 10000 DVT tokens in balance. The new lending pool has a million DVT tokens in balance. You know what to do ;)
+
+### How to exploit
+Puppet V2 의 lending pool 도 uniswap v2 의 oracle 을 이용해 borrow 가격을 결정합니다.
+바로 이전 문제 puppet 과 동일한 방법으로 oracle 의 가격을 조작하여, pool 에 있는 모든 DVT 토큰을 탈취할 수 있습니다.
+
+상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/puppet-v2/puppet-v2.challenge.js#L84)
 를 참고해 주세요.
