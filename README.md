@@ -9,7 +9,7 @@
 7. [Compromised](https://github.com/reaperes/damn-vulnerable-defi#compromised)
 8. [Puppet](https://github.com/reaperes/damn-vulnerable-defi#puppet)
 9. [Puppet v2](https://github.com/reaperes/damn-vulnerable-defi#puppet-v2)
-10. Free rider
+10. [Free rider](https://github.com/reaperes/damn-vulnerable-defi#free-rider)
 11. Backdoor
 12. Climber
 13. Safe miners
@@ -197,4 +197,36 @@ Puppet V2 의 lending pool 도 uniswap v2 의 oracle 을 이용해 borrow 가격
 바로 이전 문제 puppet 과 동일한 방법으로 oracle 의 가격을 조작하여, pool 에 있는 모든 DVT 토큰을 탈취할 수 있습니다.
 
 상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/puppet-v2/puppet-v2.challenge.js#L84)
+를 참고해 주세요.
+
+## Free rider
+A new marketplace of Damn Valuable NFTs has been released! There's been an initial mint of 6 NFTs, which are available for sale in the marketplace. Each one at 15 ETH
+A buyer has shared with you a secret alpha: the marketplace is vulnerable and all tokens can be taken. Yet the buyer doesn't know how to do it. So it's offering a payout of 45 ETH for whoever is willing to take the NFTs out and send them their way.
+You want to build some rep with this buyer, so you've agreed with the plan.
+Sadly you only have 0.5 ETH in balance. If only there was a place where you could get free ETH, at least for an instant.
+
+### How to exploit
+marketplace 에는 아래와 같은 코드가 있습니다
+```
+function buyMany(uint256[] calldata tokenIds) external payable nonReentrant {
+    for (uint256 i = 0; i < tokenIds.length; i++) {
+        _buyOne(tokenIds[i]);
+    }
+}
+
+function _buyOne(uint256 tokenId) private {       
+    ...
+    require(msg.value >= priceToPay, "Amount paid is not enough");
+    ...
+}
+```
+_buyOne(uint256 tokenId) 함수는 `msg.value` 가 `priceToPay` 보다 큰지 비교하는 부분이 있지만, 이는 1개를 구매할
+때만 정상적으로 동작하고, 여러개를 살 경우에는 버그가 발생합니다. 예를 들어 15 ETH, 15 ETH 가격의 2 nft 를 구매할 경우
+15 ETH 만 전송해도 해당 검증 코드를 통과하게 됩니다. 이를 이용해 marketplace 의 모든 nft 를 15 ETH 만으로 6개를 탈취할
+수 있습니다.
+
+하지만, 현재 attacker 는 0.5 ETH 만 들고 있어서 해당 취약점을 공격할 수 없습니다. 이는 uniswap V2 의 Flash loan 을
+이용해 15 ETH 를 대여해 marketplace 를 모두 탈취할 수 있습니다.
+
+상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/free-rider/free-rider.challenge.js#L107)
 를 참고해 주세요.
